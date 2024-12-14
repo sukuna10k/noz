@@ -1,4 +1,7 @@
 import logging
+import threading
+import http.server
+import socketserver
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database import (
@@ -148,5 +151,14 @@ async def status_command(client: Client, message: Message):
         f"Users who blocked the bot: {blocked_users}"
     )
 
+# Dummy HTTP server for Koyeb health check
+def keep_alive():
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", 8000), handler) as httpd:
+        logger.info("HTTP server is running for health checks on port 8000")
+        httpd.serve_forever()
+
 # Run the bot
-app.run()
+if __name__ == "__main__":
+    threading.Thread(target=keep_alive, daemon=True).start()
+    app.run()
